@@ -10,9 +10,10 @@ License: MIT - see license.txt
 import os
 import sys
 import logging
+import assets.ui.mediasite_scheduler_ui as mediasite_scheduler_ui
 from PyQt5 import uic, QtWidgets, QtCore, QtGui
 
-class app_view(QtWidgets.QMainWindow):
+class app_view(mediasite_scheduler_ui.Ui_MainWindow):
     def __init__(self, run_path):
         """
         params:
@@ -20,7 +21,9 @@ class app_view(QtWidgets.QMainWindow):
         """
 
         super(app_view, self).__init__()
-        uic.loadUi(run_path+'/assets/ui/mediasite_scheduler.ui', self)
+        #uic.loadUi(self.resource_path(run_path+'/assets/ui/mediasite_scheduler.ui'), self)
+        #self.ui = mediasite_scheduler_ui.Ui_MainWindow()
+        self.setupUi(self)
 
         self.run_path = run_path
 
@@ -30,6 +33,14 @@ class app_view(QtWidgets.QMainWindow):
         self.text_schedule_duration.setValidator(self.onlyInt)
 
         self.setWindowTitle("Mediasite Scheduler")
+
+        app_icon = QtGui.QIcon()
+        app_icon.addFile(run_path+"/assets/ui/mediasite_scheduler.ico", QtCore.QSize(16,16))
+        app_icon.addFile(run_path+"/assets/ui/mediasite_scheduler.ico", QtCore.QSize(24,24))
+        app_icon.addFile(run_path+"/assets/ui/mediasite_scheduler.ico", QtCore.QSize(32,32))
+        app_icon.addFile(run_path+"/assets/ui/mediasite_scheduler.ico", QtCore.QSize(48,48))
+        app_icon.addFile(run_path+"/assets/ui/mediasite_scheduler.ico", QtCore.QSize(256,256))
+        self.setWindowIcon(app_icon)
 
         self.statusbar = self.statusBar()
 
@@ -60,6 +71,9 @@ class app_view(QtWidgets.QMainWindow):
         for template in mediasite_templates:
             self.combo_schedule_template.addItem(template["Name"])
 
+        self.combo_schedule_template.model().sort(0)
+        self.combo_schedule_template.setCurrentIndex(0)
+
     def set_recorders(self, mediasite_recorders):
         """
         Sets the recorders in gui dropdown based on list of recorder names provided
@@ -70,6 +84,9 @@ class app_view(QtWidgets.QMainWindow):
 
         for recorder in mediasite_recorders:
             self.combo_schedule_recorder.addItem(recorder["name"])
+
+        self.combo_schedule_recorder.model().sort(0)
+        self.combo_schedule_recorder.setCurrentIndex(0)
 
     def set_tree_folders(self, mediasite_folders, parent_id=""):
         """
@@ -90,7 +107,35 @@ class app_view(QtWidgets.QMainWindow):
             tree_item = QtWidgets.QTreeWidgetItem(parent, [folder["name"]])
             tree_item.setData(1, 0, folder["id"])
         parent.setExpanded(True)
+
         self.tree_folder_location.sortItems(0, 0)
+
+        pathway = ""
+        current_child = parent
+        while current_child.parent():
+            pathway = current_child.text(0)+"/"+ pathway
+            current_child = current_child.parent()
+        
+        return pathway
+
+    def get_folder_pathway(self):
+        """
+        Finds current folder tree pathway including all parents. Format is "folder one/folder two/"
+
+        """ 
+
+        parent = self.tree_folder_location.currentItem()
+
+        if not parent:
+            parent = QtWidgets.QTreeWidgetItem(self.tree_folder_location, ["Mediasite"])
+
+        pathway = ""
+        current_child = parent
+        while current_child.parent():
+            pathway = current_child.text(0)+"/"+ pathway
+            current_child = current_child.parent()
+        
+        return pathway
 
     def set_progressbar_main_value(self, progress_value):
         """
@@ -103,7 +148,7 @@ class app_view(QtWidgets.QMainWindow):
         self.progressbar_main.setValue(progress_value)
 
 
-    def error_dialog(self, modal_title, modal_description):
+    def error_dialog(self, window_title, window_text):
         """
         Create an error message dialog box using the provided title and description
 
@@ -115,9 +160,9 @@ class app_view(QtWidgets.QMainWindow):
         #reset mouse cursor to default
         self.set_mouse_cursor_default()
 
-        QtWidgets.QMessageBox.critical(self, modal_title, modal_description)
+        QtWidgets.QMessageBox.critical(self, window_title, window_text)
 
-    def info_dialog(self, modal_title, modal_description):
+    def info_dialog(self, window_title, window_text):
         """
         Create an error message dialog box using the provided title and description
 
@@ -129,7 +174,7 @@ class app_view(QtWidgets.QMainWindow):
         #reset mouse cursor to default
         self.set_mouse_cursor_default()
         
-        QtWidgets.QMessageBox.information(self, modal_title, modal_description)
+        QtWidgets.QMessageBox.information(self, window_title, window_text)
 
     def csv_file_dialog(self):
         """
@@ -143,9 +188,6 @@ class app_view(QtWidgets.QMainWindow):
     def more_info_dialog(self, window_title="", window_text="", results="Successfully created schedule"):
         """
         Create batch import dialog containing results of imported schedule data
-
-        returns:
-            Dialog displaying results of batch import
         """
 
         batch_import_dialog = QtWidgets.QMessageBox(self)
@@ -155,4 +197,23 @@ class app_view(QtWidgets.QMainWindow):
         batch_import_dialog.setStandardButtons(QtWidgets.QMessageBox.Ok);
         batch_import_dialog.setDetailedText(results)
         batch_import_dialog.buttons()[1].click()
-        batch_import_dialog.exec();
+        batch_import_dialog.exec()
+
+    def password_input_dialog(self, window_title="", window_text=""):
+        """
+        Create input dialog for typing in password
+
+        returns:
+            password provided from prompt
+        """
+        password_dialog = QtWidgets.QInputDialog(self)
+        password_dialog.setWindowTitle(window_title);
+        password_dialog.setLabelText(window_text);
+        password_dialog.setMinimumSize(300,90);
+        password_dialog.resize(300,90)   
+        password_dialog.setTextEchoMode(QtWidgets.QLineEdit.Password)
+        password_dialog.exec()
+
+        return password_dialog.textValue()
+
+

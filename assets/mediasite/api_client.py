@@ -1,7 +1,7 @@
 """
 Class for creating connections to Mediasite API
 
-Last modified: Feb 2018
+Last modified: May 2018
 By: Dave Bunten
 
 License: MIT - see license.txt
@@ -39,7 +39,7 @@ class client:
 		return_string  = "Basic "+str(base64.b64encode(bytes(self.username+":"+self.password,"utf-8")).decode("utf-8"))
 		return return_string
 
-	def do_request(self, request_type, resource, odata_attributes, post_vars):
+	def request(self, request_type, resource, odata_attributes, post_vars):
 		"""
 		Performs API request based on parameter data
 
@@ -71,6 +71,9 @@ class client:
 
 			elif request_type == "put":
 				rsp = requests.put(url, headers=auth_values, json=post_vars, verify=False)
+
+			elif request_type == "delete":
+				rsp = requests.delete(url, headers=auth_values, verify=False)
 
 			elif request_type == "patch":
 				rsp = requests.patch(url, headers=auth_values, json=post_vars, verify=False)

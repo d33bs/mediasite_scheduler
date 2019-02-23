@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>761</width>
-    <height>651</height>
+    <height>680</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,13 +17,102 @@
    <enum>QTabWidget::Rounded</enum>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QGroupBox" name="groupBox_2">
+   <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>170</y>
+      <y>180</y>
       <width>251</width>
-      <height>221</height>
+      <height>191</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Customer Information</string>
+    </property>
+    <widget class="QWidget" name="formLayoutWidget_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>231</width>
+       <height>161</height>
+      </rect>
+     </property>
+     <layout class="QFormLayout" name="formLayout_5">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_request_num">
+        <property name="text">
+         <string>Request #</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="text_request_num"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_request_name">
+        <property name="text">
+         <string>Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="text_request_name">
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_request_email">
+        <property name="text">
+         <string>Email</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="text_request_email"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_request_phone">
+        <property name="text">
+         <string>Phone #</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="text_request_phone"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_request_dept">
+        <property name="text">
+         <string>Department</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="text_request_dept"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_request_affiliation">
+        <property name="text">
+         <string>Affiliation</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="text_request_affiliation"/>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_2">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>380</y>
+      <width>231</width>
+      <height>211</height>
      </rect>
     </property>
     <property name="title">
@@ -34,8 +123,8 @@
       <rect>
        <x>10</x>
        <y>24</y>
-       <width>240</width>
-       <height>71</height>
+       <width>211</width>
+       <height>74</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_6">
@@ -50,19 +139,16 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QCheckBox" name="check_catalog_allow_links">
+       <widget class="QCheckBox" name="check_catalog_downloads">
         <property name="text">
-         <string>Allow Catalog Links</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
+         <string>Downloads Enabled</string>
         </property>
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QCheckBox" name="check_catalog_downloads">
+       <widget class="QCheckBox" name="check_catalog_public">
         <property name="text">
-         <string>Downloads Enabled</string>
+         <string>Public Access</string>
         </property>
        </widget>
       </item>
@@ -73,8 +159,8 @@
       <rect>
        <x>10</x>
        <y>100</y>
-       <width>231</width>
-       <height>118</height>
+       <width>211</width>
+       <height>101</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_7">
@@ -111,7 +197,7 @@
       <x>270</x>
       <y>380</y>
       <width>241</width>
-      <height>181</height>
+      <height>211</height>
      </rect>
     </property>
     <property name="title">
@@ -123,7 +209,7 @@
        <x>10</x>
        <y>18</y>
        <width>221</width>
-       <height>151</height>
+       <height>181</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_11">
@@ -360,8 +446,8 @@
       <rect>
        <x>360</x>
        <y>160</y>
-       <width>111</width>
-       <height>191</height>
+       <width>95</width>
+       <height>199</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_4">
@@ -434,7 +520,7 @@
       <rect>
        <x>10</x>
        <y>130</y>
-       <width>461</width>
+       <width>321</width>
        <height>22</height>
       </rect>
      </property>
@@ -530,26 +616,39 @@
      </layout>
     </widget>
    </widget>
-   <widget class="QPushButton" name="button_submit">
+   <widget class="QPushButton" name="button_run">
     <property name="geometry">
      <rect>
-      <x>650</x>
-      <y>570</y>
+      <x>530</x>
+      <y>600</y>
       <width>101</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>Submit</string>
+     <string>Run</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="button_cancel">
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>600</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Cancel</string>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox_6">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>380</y>
-      <width>231</width>
-      <height>181</height>
+      <x>10</x>
+      <y>500</y>
+      <width>251</width>
+      <height>91</height>
      </rect>
     </property>
     <property name="title">
@@ -560,11 +659,18 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>211</width>
-       <height>151</height>
+       <width>231</width>
+       <height>61</height>
       </rect>
      </property>
      <layout class="QFormLayout" name="formLayout_9">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_output">
+        <property name="text">
+         <string>Output   </string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
        <widget class="QPlainTextEdit" name="text_output"/>
       </item>
@@ -575,9 +681,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>400</y>
+      <y>380</y>
       <width>251</width>
-      <height>161</height>
+      <height>111</height>
      </rect>
     </property>
     <property name="title">

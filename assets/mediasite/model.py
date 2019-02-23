@@ -2,7 +2,7 @@
 Mediasite model for medaisite scheduler. Stores various data gathered
 from Mediasite API using mediasite_web_api client.
 
-Last modified: Feb 2018
+Last modified: May 2018
 By: Dave Bunten
 
 License: MIT - see license.txt
@@ -12,7 +12,7 @@ import os
 import sys
 import logging
 
-class mediasite_model():
+class model():
     def __init__(self):
         self.current_connection_valid = False
         self.root_parent_folder_id = ""
@@ -21,6 +21,7 @@ class mediasite_model():
         self.schedules = {}
         self.recurrences = {}
         self.folders = {}
+        self.catalogs = []
 
     def translate_recorder_id(self, recorder_name):
         """
@@ -104,3 +105,9 @@ class mediasite_model():
 
     def set_root_parent_folder_id(self, root_parent_folder_id):
         self.root_parent_folder_id = root_parent_folder_id
+
+    def get_catalogs(self):
+        return self.catalogs
+
+    def set_catalogs(self, catalogs):
+        self.catalogs = catalogs

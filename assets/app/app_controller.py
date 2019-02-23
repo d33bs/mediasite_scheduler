@@ -12,32 +12,42 @@ import sys
 import logging
 import datetime
 import csv
+import tempfile
+import shutil
 from PyQt5 import uic, QtWidgets, QtCore, QtGui
-import assets.mediasite.mediasite_model as mediasite_model
-import assets.mediasite.mediasite_controller as mediasite_controller
+import assets.mediasite.controller as mediasite_controller
+import config.config as config
 
 class app_controller():
-    def __init__(self, view):
+    def __init__(self, view, logfile_path):
         """
 		params:
 			view: application view which is related to this controller class
+            logfile_path: path to the current logfile
 		"""
-        self.view = view
 
-        #creating mediasite model and controller to perform various tasks using the mediasite api client
-        self.mediasite_model = mediasite_model.mediasite_model()
-        self.mediasite_controller = mediasite_controller.mediasite_controller(self.mediasite_model, self.view.run_path)
+        self.view = view
+        self.logfile_path = logfile_path
+        self.central_log_dir = config.config_data["app_central_log_dir"]
+
+        #check password on open of application
+        #self.check_password(self.view.password_input_dialog("Please enter the password","Password"), config.config_data["app_secret"])
 
         #change the mouse cursor to show a wait icon
         self.view.set_mouse_cursor_wait()
+
+        #creating mediasite model and controller to perform various tasks using the mediasite api client
+        self.mediasite_controller = mediasite_controller.controller(config.config_data)
+        self.mediasite_model = self.mediasite_controller.model
 
         if not self.mediasite_connection_validated():
             logging.error("Encountered errors with Mediasite connection. Preventing run actions.")
         else:
             #populate gui elements with various data from mediasite system
-            self.view.set_templates(self.mediasite_model.get_templates())
-            self.view.set_recorders(self.mediasite_model.get_recorders())
-            self.view.set_tree_folders(self.mediasite_model.get_folders()[self.mediasite_model.get_root_parent_folder_id()])
+            self.mediasite_controller.folder.gather_root_folder_id()
+            self.view.set_templates(self.mediasite_controller.template.gather_templates())
+            self.view.set_recorders(self.mediasite_controller.recorder.gather_recorders())
+            self.view.set_tree_folders(self.mediasite_controller.folder.gather_folders())
 
         #gather current date and time for use as defaults within the application
         current_qtDate = QtCore.QDate.currentDate()
@@ -111,10 +121,9 @@ class app_controller():
                                     results_string
                                     )
 
-        if self.view.check_catalog_include.isChecked():
-            self.view.text_output.setPlainText("Catalog URL: "+result["catalog_result"]["CatalogUrl"])
-        else:
-            self.view.text_output.setPlainText("Folder and schedule created")
+            self.view.text_output.setPlainText(results_string)
+
+        self.upload_centralized_logs()
 
     def click_menu_about(self):
         """
@@ -148,7 +157,7 @@ class app_controller():
         logging.info("Beginning batch processing of csv data...")
 
         #send csv data to mediasite controller for batch data processing
-        results = self.mediasite_controller.process_batch_scheduling_data(csv_data)
+        results = self.mediasite_controller.schedule.process_batch_scheduling_data(csv_data)
 
         logging.info("Finished batch processing!")
 
@@ -162,6 +171,14 @@ class app_controller():
                                     "Your batch import is now complete. Please see details for more information.", 
                                     results_string
                                     )
+
+        self.upload_centralized_logs()
+
+    def upload_centralized_logs(self):
+        """
+        function for uploading logs to a centralized location for analysis
+        """
+        shutil.copy2(self.logfile_path, self.central_log_dir)
 
     def interpret_mediasite_controller_processing_results(self, results):
         """
@@ -180,9 +197,13 @@ class app_controller():
                 if key == "error":
                     results_string += val + "\n\n"
                     break
+                elif key == "schedule_result":
+                    if val["folder_directory"] == "":
+                        results_string += "Schedule: " + val["Name"] + " : " + self.view.get_folder_pathway() + "\n"
+                    else:
+                        results_string += "Schedule: " + val["Name"] + " : " + val["folder_directory"] + "\n"
                 elif key == "catalog_result":
-                    results_string += val["Name"] + " : " + val["CatalogUrl"] +"\n\n"
-                    break
+                    results_string += "Catalog: " + val["Name"] + " : " + val["CatalogUrl"] +"\n\n"
 
         if results_string == "":
             results_string = "Successfully created schedule."
@@ -233,7 +254,7 @@ class app_controller():
             true if no errors were encountered, false if any errors were encountered
         """
 
-        if not self.mediasite_controller.mediasite_connection_validated(): 
+        if not self.mediasite_controller.connection_validated(): 
             self.view.error_dialog('Error',"Mediasite connection issues. Please select File -> Reconnect to validate connection. See log for more details.")
             return False
 
@@ -247,6 +268,7 @@ class app_controller():
 
         if self.view.check_catalog_include.isChecked():
             self.view.check_catalog_downloads.setEnabled(True)
+            self.view.check_catalog_allow_links.setEnabled(True)
             self.view.text_catalog_title.setEnabled(True)
             self.view.label_catalog_title.setEnabled(True)
             self.view.label_catalog_desc.setEnabled(True)
@@ -254,6 +276,7 @@ class app_controller():
 
         else:
             self.view.check_catalog_downloads.setEnabled(False)
+            self.view.check_catalog_allow_links.setEnabled(False)
             self.view.text_catalog_title.setEnabled(False)
             self.view.label_catalog_title.setEnabled(False)
             self.view.label_catalog_desc.setEnabled(False)
@@ -289,12 +312,13 @@ class app_controller():
         c_semester = self.view.text_course_semester.text().upper()
         c_subject = self.view.text_course_subject.text().upper()
         c_number = self.view.text_course_number.text().upper()
-        c_section = self.view.text_course_section.text().upper().replace(" ","_")
+        c_section_title = self.view.text_course_section.text().upper().replace(" ","_")
+        c_section = self.view.text_course_section.text().upper()
         c_title = self.view.text_course_title.text()
         c_recorder = self.view.combo_schedule_recorder.currentText().replace("-","")
 
         #set the full versions of presentation, catalog, or folder naming based on conventions
-        self.view.text_schedule_title.setText(c_subject+c_number+"_"+c_section+"_"+c_recorder)
+        self.view.text_schedule_title.setText(c_subject+c_number+"_"+c_section_title+"_"+c_recorder)
         self.view.text_folder_location.setText(c_subject+"/"+c_number+"/"+c_section)
         self.view.text_catalog_title.setText(c_subject+" "+c_number+" "+c_section+" "+c_semester)
         self.view.text_module_name.setText(c_subject+" "+c_number+" "+c_section+" "+c_semester)
@@ -359,8 +383,7 @@ class app_controller():
         current_item = self.view.tree_folder_location.currentItem()
         selected_id = current_item.data(1,0)
         if current_item.childCount() == 0 and selected_id != "None":
-            self.view.set_tree_folders(self.mediasite_controller.mediasite_gather_folders(selected_id),selected_id)
-
+             self.view.set_tree_folders(self.mediasite_controller.folder.gather_folders(selected_id),selected_id)
 
     def gather_mediasite_schedule_data(self):
         """
@@ -383,8 +406,8 @@ class app_controller():
         #find UTC times for datetimes due to Mediasite requirements
         local_start_datetime = datetime.datetime.strptime(local_start_datetime_string, "%Y-%m-%dT%H:%M:%S")
         local_end_datetime = datetime.datetime.strptime(local_end_datetime_string, "%Y-%m-%dT%H:%M:%S")
-        utc_start_datetime = self.mediasite_controller.convert_datetime_local_to_utc(local_start_datetime)
-        utc_end_datetime = self.mediasite_controller.convert_datetime_local_to_utc(local_end_datetime)
+        utc_start_datetime = self.mediasite_controller.schedule.convert_datetime_local_to_utc(local_start_datetime)
+        utc_end_datetime = self.mediasite_controller.schedule.convert_datetime_local_to_utc(local_end_datetime)
         utc_start_datetime_string = utc_start_datetime.strftime("%Y-%m-%dT%H:%M:%S")
         utc_end_datetime_string = utc_end_datetime.strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -395,6 +418,7 @@ class app_controller():
             "catalog_name":self.view.text_catalog_title.text(),
             "catalog_description":self.view.text_catalog_desc.toPlainText(),
             "catalog_enable_download":self.view.check_catalog_downloads.isChecked(),
+            "catalog_allow_links":self.view.check_catalog_allow_links.isChecked(),
             "module_include":self.view.check_module_include.isChecked(),
             "module_name":self.view.text_module_name.text(),
             "module_id":self.view.text_module_moduleid.text(),
@@ -437,6 +461,22 @@ class app_controller():
             results_string: string which contains relevant information on processed schedule information
         """
         current_datetime_string = '{dt.month}-{dt.day}-{dt.year}_{dt.hour}-{dt.minute}-{dt.second}'.format(dt = datetime.datetime.now())
-        
-        with open(self.view.run_path+"/logs/"+result_type+"_process_result_"+current_datetime_string+".log", "w") as log_file:
+
+        if not os.path.exists(tempfile.gettempdir()+"/mediasite_scheduler/"):
+            os.makedirs(tempfile.gettempdir()+"/mediasite_scheduler/")
+
+        with open(tempfile.gettempdir()+"/mediasite_scheduler/"+result_type+"_process_result_"+current_datetime_string+".log", "w") as log_file:
             log_file.write(results_string)
+
+    def check_password(self, user_answer, secret):
+        """
+        Performs simple check against password
+
+        params:
+            password: user-provided text for entered password
+        """
+
+        if user_answer != secret:
+            self.view.error_dialog("Error","Incorrect password. Closing application.")
+            sys.exit(1)
+            
